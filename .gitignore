@@ -17,9 +17,3 @@ config.json
 *.zip
 outputs/
 work/
-
-# Optional third-party fonts: add only with verified redistribution rights.
-*.ttf
-*.otf
-*.woff
-*.woff2

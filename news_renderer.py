@@ -20,20 +20,11 @@ NEWS_IMAGE_TEMPLATE = r"""
 <head>
   <meta charset="utf-8">
   <style>
-    {% if font_data %}
-    @font-face {
-      font-family: "HYRunYuan Embedded";
-      src: url("data:font/woff2;base64,{{ font_data }}") format("woff2");
-      font-style: normal;
-      font-weight: 400;
-      font-display: block;
-    }
-    {% endif %}
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; background: #f3f5ff; }
     body {
       color: #202126;
-      font-family: "HYRunYuan Embedded", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei",
+      font-family: "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei",
         "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
     }

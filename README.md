@@ -1,7 +1,5 @@
 # 橘鸦AI日报推送
 
-> 插件内部标识：`astrbot_plugin_daily_ai_news`
-
 每日 AI 资讯自动推送插件 - 为 [AstrBot](https://github.com/AstrBotDevs/AstrBot) 开发
 
 通过 RSS 订阅 [橘鸦 AI 日报](https://daily.juya.uk/rss.xml) 获取最新 AI 早报，将当期**全部更新**按原栏目顺序渲染为一张高清长图，自动推送到 QQ 群 / 私聊。
@@ -10,7 +8,6 @@
 
 - 📰 **每日自动推送**：每天定时（默认早 8:00）自动推送最新 AI 资讯
 - 🖼️ **精美图片日报**：提取原始 RSS 的标题、导语、栏目和来源，按资讯卡片排版为图片
-- 🔤 **可选中文字体**：公开仓库不捆绑第三方字体；部署者如拥有授权，可将 WOFF2 字体放到插件根目录，缺失时自动使用系统中文字体
 - 🛡️ **明确失败提示**：图片渲染或发送多次失败后，仅发送对应的失败提示，不调用模型，也不发送 RSS 纯文本
 - 🔄 **手动获取**：发送 `/AI日报` 随时获取最新 AI 资讯
 - 📋 **灵活订阅**：支持配置文件填写群号/QQ号 + 群内指令订阅两种方式
@@ -73,7 +70,7 @@
 ### 方式一：AstrBot 插件市场（推荐）
 
 1. 打开 AstrBot WebUI → **插件** → **插件市场**。
-2. 搜索 **橘鸦AI日报推送** 或 `astrbot_plugin_daily_ai_news`。
+2. 搜索 **橘鸦AI日报推送** 或 `astrbot_plugin_juya_ai_daily`。
 3. 点击安装并启用；修改配置后可在插件卡片菜单中点击“重载插件”。
 
 ### 方式二：Git 克隆
@@ -82,14 +79,14 @@
 
 ```bash
 cd /path/to/AstrBot/data/plugins
-git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git astrbot_plugin_daily_ai_news
+git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git
 ```
 
 Windows PowerShell 示例：
 
 ```powershell
 cd C:\path\to\AstrBot\data\plugins
-git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git astrbot_plugin_daily_ai_news
+git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git
 ```
 
 重启 AstrBot，或在插件管理页执行“重载插件”。
@@ -97,10 +94,6 @@ git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git astrbot_p
 ### 方式三：上传 ZIP
 
 在 AstrBot WebUI → **插件** → **已安装** → **安装插件** → **从文件安装**，选择 GitHub Release 中下载的 ZIP 文件。压缩包内应直接包含 `main.py`、`metadata.yaml` 和 `_conf_schema.json`。
-
-### 发布到自己的 GitHub
-
-本版本已将仓库地址写入 `metadata.yaml` 的 `repo` 字段和 `main.py` 的 `@register(..., repo=...)` 参数，AstrBot 可据此识别更新来源。
 
 本版本使用 AstrBot 官方 HTML 渲染和消息发送接口，要求 AstrBot `>=4.5.7`；不调用 LLM。
 
@@ -111,10 +104,8 @@ git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git astrbot_p
 - 配置群号方式需要填写 QQ 群号码（纯数字），指令方式需在群内发送 `/AI日报订阅`
 - 两种订阅方式（配置文件 + 指令）可同时使用，插件会自动合并去重
 - 投递状态按文章和目标分别记录，最多保留最近 30 期；本地图片默认保留 7 天
-- 公开仓库不包含汉仪润圆字体；如你拥有合法嵌入/再分发授权，可将 `HYRunYuan-55S.woff2` 放在插件根目录，字体缺失或损坏时会回退系统中文字体栈
 - 图片日报依赖 AstrBot 的 HTML 渲染服务；服务不可用时会发送渲染失败提示
 - 每期 RSS 的全部新闻会按原栏目顺序合并到一张长图，不截取、不分页
-- 若自行提供授权字体，渲染时会产生约 8.2 MiB 的 Base64 请求增量，但不会常驻内存，也不需要服务器安装字体或新增字体处理库；授权注意事项见 `FONT_NOTICE.md`
 
 ## 📝 更新日志
 

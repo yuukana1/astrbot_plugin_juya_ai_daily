@@ -28,10 +28,8 @@ SAMPLE_HTML = """
 
 
 class NewsRendererTests(unittest.TestCase):
-    def test_template_supports_optional_hyrunyuan_font(self):
-        self.assertIn('font-family: "HYRunYuan Embedded"', NEWS_IMAGE_TEMPLATE)
-        self.assertIn("data:font/woff2;base64,{{ font_data }}", NEWS_IMAGE_TEMPLATE)
-
+    def test_template_uses_system_font_stack(self):
+        self.assertIn('font-family: "Noto Sans CJK SC"', NEWS_IMAGE_TEMPLATE)
 
     def test_extracts_detailed_items_not_overview(self):
         items = extract_news_items(SAMPLE_HTML, max_items=4)

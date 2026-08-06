@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import hashlib
 import json
 import os
@@ -37,6 +38,7 @@ from .delivery import (
 
 # RSS 订阅源配置
 RSS_URL = "https://daily.juya.uk/rss.xml"
+EMBEDDED_FONT_FILENAME = "LXGWWenKaiLite-Regular.ttf"
 
 @register(
     "astrbot_plugin_juya_ai_daily",
@@ -247,6 +249,11 @@ class DailyAINewsPlugin(Star):
         image_enabled = (
             "已启用" if self.config.get("enable_image_render", True) else "已关闭"
         )
+        font_info = (
+            "霞鹜文楷（内置）"
+            if self._embedded_font_path().is_file()
+            else "系统字体（无字体轻量版）"
+        )
 
         current_targets = self._get_all_targets()
         subscription_info = self._format_subscription_status(current_targets)
@@ -269,6 +276,7 @@ class DailyAINewsPlugin(Star):
             f"🔄 轮询间隔：{poll_interval} 秒\n"
             f"🌏 调度时区：{self.config.get('timezone', 'Asia/Shanghai')}\n"
             f"🖼️ 图片日报：{image_enabled}\n"
+            f"🔤 日报字体：{font_info}\n"
             f"🛡️ 渲染服务：{breaker_info}\n"
             f"{subscription_info}\n"
             f"📚 已推送日期缓存：{len(self._sent_dates)} 天\n"
@@ -745,6 +753,32 @@ class DailyAINewsPlugin(Star):
         await self._save_sent_news()
         logger.info(f"{article_date} 已对全部当前目标完成投递")
 
+    @staticmethod
+    def _embedded_font_path() -> Path:
+        return (
+            Path(__file__).resolve().parent
+            / "assets"
+            / EMBEDDED_FONT_FILENAME
+        )
+
+    async def _load_render_font_data(self) -> str:
+        """按需读取内置字体；无字体轻量版自动返回空值。"""
+        font_path = self._embedded_font_path()
+        if not font_path.is_file():
+            return ""
+
+        try:
+            font_bytes = await asyncio.to_thread(font_path.read_bytes)
+            if not font_bytes.startswith((b"\x00\x01\x00\x00", b"OTTO")):
+                raise ValueError("文件不是有效的 TTF/OTF 字体")
+            return base64.b64encode(font_bytes).decode("ascii")
+        except Exception as e:
+            logger.warning(
+                f"内置霞鹜文楷加载失败，将使用系统字体: "
+                f"{type(e).__name__}: {e}"
+            )
+            return ""
+
     async def _render_news_image(
         self, article: Dict, article_date: str
     ) -> Optional[str]:
@@ -799,6 +833,7 @@ class DailyAINewsPlugin(Star):
                 now=self._now(),
                 total_count=len(items),
             )
+            render_data["font_data"] = await self._load_render_font_data()
             max_attempts = self._config_int("render_max_retries", 3, 1, 8)
             base_delay = self._config_float("retry_base_delay", 2.0, 0.0, 30.0)
             timeout = self._config_int("render_timeout", 45, 10, 120)

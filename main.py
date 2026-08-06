@@ -214,7 +214,7 @@ class DailyAINewsPlugin(Star):
 
     @filter.command("AI日报订阅")
     async def cmd_subscribe(self, event: AstrMessageEvent):
-        """订阅每日 AI 资讯推送（在群聊中使用）"""
+        """为当前群聊或私聊订阅每日 AI 资讯推送。"""
         umo = event.unified_msg_origin
         logger.info(f"订阅状态: {umo}")
         if umo in self._cmd_subscriptions:
@@ -223,7 +223,7 @@ class DailyAINewsPlugin(Star):
         self._cmd_subscriptions.add(umo)
         await self._save_subscriptions()
         yield event.plain_result(
-            "✅ 订阅成功！每日将自动推送 AI 早报总结到本群。\n"
+            "✅ 订阅成功！每日将自动向当前会话推送完整图片 AI 日报。\n"
             "取消订阅请发送 /AI日报退订"
         )
 

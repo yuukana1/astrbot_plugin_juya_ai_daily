@@ -35,6 +35,11 @@ class NewsRendererTests(unittest.TestCase):
         self.assertIn('font-family: "LXGW WenKai Lite Embedded"', NEWS_IMAGE_TEMPLATE)
         self.assertIn("data:font/ttf;base64,{{ font_data }}", NEWS_IMAGE_TEMPLATE)
 
+    def test_template_fills_renderer_viewport_without_white_edge(self):
+        self.assertIn("width: 100vw;", NEWS_IMAGE_TEMPLATE)
+        self.assertIn("min-width: 1120px;", NEWS_IMAGE_TEMPLATE)
+        self.assertIn("overflow-x: hidden;", NEWS_IMAGE_TEMPLATE)
+
     def test_extracts_detailed_items_not_overview(self):
         items = extract_news_items(SAMPLE_HTML, max_items=4)
         self.assertEqual(len(items), 2)

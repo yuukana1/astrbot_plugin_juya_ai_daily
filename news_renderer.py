@@ -30,7 +30,14 @@ NEWS_IMAGE_TEMPLATE = r"""
     }
     {% endif %}
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background: #f3f5ff; }
+    html, body {
+      width: 100%;
+      min-width: 1120px;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      background: #f3f5ff;
+    }
     body {
       color: #202126;
       font-family: "LXGW WenKai Lite Embedded", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei",
@@ -38,7 +45,8 @@ NEWS_IMAGE_TEMPLATE = r"""
       -webkit-font-smoothing: antialiased;
     }
     .sheet {
-      width: 1120px;
+      width: 100vw;
+      min-width: 1120px;
       min-height: 1520px;
       padding: 62px 66px 48px;
       overflow: hidden;

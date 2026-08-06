@@ -2,7 +2,7 @@ name: astrbot_plugin_juya_ai_daily
 display_name: 橘鸦AI日报推送
 desc: 每日获取橘鸦 AI 日报的全部更新，按原栏目顺序排版为一张高清长图，支持群聊与私聊订阅、定时推送和手动获取。
 short_desc: 将橘鸦AI日报全部更新渲染为一张高清长图并自动推送
-version: "1.0.0"
+version: "1.0.1"
 author: yuukana1
 astrbot_version: ">=4.5.7"
 support_platforms:

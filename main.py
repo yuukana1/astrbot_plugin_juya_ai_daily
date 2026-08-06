@@ -160,10 +160,13 @@ class DailyAINewsPlugin(Star):
     @filter.command("AI日报")
     async def cmd_ainews(self, event: AstrMessageEvent):
         """手动获取最新 AI 早报"""
-        yield event.plain_result("🔄 正在从 RSS 获取最新 AI 早报，请稍候...")
         article = await self._fetch_rss_latest()
         if not article:
-            yield event.plain_result("😞 暂时未能获取到 AI 早报，请稍后再试。")
+            yield event.plain_result(
+                self._image_failure_notice(
+                    self._now().strftime("%Y-%m-%d"), "render"
+                )
+            )
             return
 
         # 使用文章实际日期展示；图片与摘要缓存还会包含文章链接/内容指纹。
@@ -182,9 +185,6 @@ class DailyAINewsPlugin(Star):
             if self._recent_image_sent(
                 delivery_key
             ) or self._recent_manual_image_attempted(delivery_key):
-                yield event.plain_result(
-                    f"ℹ️ {article_date} 的这条手动请求刚刚已经处理过，本次不重复发送。"
-                )
                 return
 
             image = self._get_cached_image(article_date)
@@ -244,17 +244,12 @@ class DailyAINewsPlugin(Star):
         hour = self._config_int("push_hour", 8, 0, 23)
         minute = self._config_int("push_minute", 0, 0, 59)
         poll_interval = self._config_int("rss_poll_interval", 600, 60, 86400)
-        cmd_sub_count = len(self._cmd_subscriptions)
-        cfg_groups = self._get_config_groups()
-        cfg_group_count = len(cfg_groups)
-        cfg_users = self._get_config_users()
-        cfg_user_count = len(cfg_users)
-
         image_enabled = (
             "已启用" if self.config.get("enable_image_render", True) else "已关闭"
         )
 
         current_targets = self._get_all_targets()
+        subscription_info = self._format_subscription_status(current_targets)
         pending_count = sum(
             len(pending_targets(record, current_targets))
             for record in self._delivery_records.values()
@@ -275,9 +270,7 @@ class DailyAINewsPlugin(Star):
             f"🌏 调度时区：{self.config.get('timezone', 'Asia/Shanghai')}\n"
             f"🖼️ 图片日报：{image_enabled}\n"
             f"🛡️ 渲染服务：{breaker_info}\n"
-            f"📋 指令订阅数：{cmd_sub_count}\n"
-            f"📋 配置群聊数：{cfg_group_count}\n"
-            f"📋 配置私聊数：{cfg_user_count}\n"
+            f"{subscription_info}\n"
             f"📚 已推送日期缓存：{len(self._sent_dates)} 天\n"
             f"📚 已推送文章缓存：{len(self._sent_links)} 篇\n"
             f"⏳ 待重试目标：{pending_count} 个\n"
@@ -977,10 +970,9 @@ class DailyAINewsPlugin(Star):
             return []
         return [u.strip() for u in users_text.strip().split("\n") if u.strip()]
 
-    def _get_all_targets(self) -> Set[str]:
-        """获取所有推送目标。"""
-        targets = set(self._cmd_subscriptions)
-
+    def _get_config_targets(self) -> Set[str]:
+        """将配置中的群聊和私聊账号转换为统一会话标识。"""
+        targets: Set[str] = set()
         cfg_groups = self._get_config_groups()
         for group_id in cfg_groups:
             parts = group_id.split(":")
@@ -1006,6 +998,51 @@ class DailyAINewsPlugin(Star):
                 targets.add(umo)
 
         return targets
+
+    def _get_all_targets(self) -> Set[str]:
+        """获取配置订阅与指令订阅合并去重后的全部推送目标。"""
+        return set(self._cmd_subscriptions) | self._get_config_targets()
+
+    def _format_subscription_status(self, targets: Set[str]) -> str:
+        """按会话类型列出订阅目标、机器人和订阅来源。"""
+        configured_targets = self._get_config_targets()
+        groups: List[str] = []
+        users: List[str] = []
+        others: List[str] = []
+
+        for umo in sorted(targets):
+            sources = []
+            if umo in self._cmd_subscriptions:
+                sources.append("指令")
+            if umo in configured_targets:
+                sources.append("配置")
+            source_text = "、".join(sources) or "未知"
+
+            parts = umo.split(":", 2)
+            if len(parts) != 3:
+                others.append(f"  • {umo}（来源：{source_text}）")
+                continue
+
+            bot_name, message_type, target_id = parts
+            detail = f"机器人：{bot_name}；来源：{source_text}"
+            if message_type == "GroupMessage":
+                groups.append(f"  • 群号 {target_id}（{detail}）")
+            elif message_type == "FriendMessage":
+                users.append(f"  • 用户 {target_id}（{detail}）")
+            else:
+                others.append(f"  • {umo}（来源：{source_text}）")
+
+        def section(icon: str, title: str, entries: List[str]) -> str:
+            header = f"{icon} {title}（{len(entries)}）"
+            return f"{header}：\n" + "\n".join(entries) if entries else f"{header}：无"
+
+        sections = [
+            section("👥", "群聊订阅", groups),
+            section("👤", "私聊订阅", users),
+        ]
+        if others:
+            sections.append(section("🧩", "其他会话订阅", others))
+        return "\n".join(sections)
 
     # ==================== 持久化（带锁 + 原子写）====================
 

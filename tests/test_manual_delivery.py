@@ -171,6 +171,44 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(messages), 1)
         self.assertIn("当前会话", messages[0])
 
+    def test_status_lists_group_and_private_subscription_details(self):
+        plugin = object.__new__(DailyAINewsPlugin)
+        plugin.config = {
+            "subscribed_groups": "napcat:7788",
+            "subscribed_users": "2233",
+        }
+        plugin._cmd_subscriptions = {
+            "napcat:GroupMessage:7788",
+            "napcat:FriendMessage:10001",
+        }
+
+        status = plugin._format_subscription_status(plugin._get_all_targets())
+
+        self.assertIn("群聊订阅（1）", status)
+        self.assertIn("群号 7788", status)
+        self.assertIn("来源：指令、配置", status)
+        self.assertIn("私聊订阅（2）", status)
+        self.assertIn("用户 10001", status)
+        self.assertIn("用户 2233", status)
+        self.assertNotIn("指令订阅数", status)
+
+    async def test_fetch_failure_returns_only_render_failure(self):
+        plugin = object.__new__(DailyAINewsPlugin)
+
+        async def fetch():
+            return None
+
+        plugin._fetch_rss_latest = fetch
+        plugin._now = lambda: types.SimpleNamespace(
+            strftime=lambda _format: "2026-08-06"
+        )
+
+        results = [item async for item in plugin.cmd_ainews(FakeEvent())]
+
+        self.assertEqual(len(results), 1)
+        self.assertIn("图片渲染失败", results[0])
+        self.assertNotIn("正在从 RSS 获取", results[0])
+
     async def test_single_manual_send_attempt_even_when_platform_raises(self):
         plugin = object.__new__(DailyAINewsPlugin)
         plugin.config = {"image_delivery_mode": "url"}
@@ -276,7 +314,7 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(send_calls, 1)
-        self.assertTrue(any("不重复发送" in item for item in first + second))
+        self.assertEqual(first + second, [])
 
     async def test_scheduled_delivery_does_not_block_manual_command(self):
         plugin = object.__new__(DailyAINewsPlugin)
@@ -326,9 +364,7 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
         ]
 
         self.assertEqual(send_calls, 2)
-        self.assertFalse(
-            any("不重复发送" in item for item in first_results + second_results)
-        )
+        self.assertEqual(first_results + second_results, [])
 
 
 if __name__ == "__main__":

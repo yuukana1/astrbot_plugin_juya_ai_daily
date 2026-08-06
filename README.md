@@ -8,6 +8,7 @@
 
 - 📰 **每日自动推送**：每天定时（默认早 8:00）自动推送最新 AI 资讯
 - 🖼️ **精美图片日报**：提取原始 RSS 的标题、导语、栏目和来源，按资讯卡片排版为图片
+- 🔤 **开源中文字体**：默认版内置霞鹜文楷轻便版 Regular；无字体轻量版自动使用系统中文字体
 - 🛡️ **明确失败提示**：图片渲染或发送多次失败后，仅发送对应的失败提示，不调用模型，也不发送 RSS 纯文本
 - 🔄 **手动获取**：发送 `/AI日报` 随时获取最新 AI 资讯
 - 📋 **灵活订阅**：支持配置文件填写群号/QQ号，也可在群聊或私聊中发送指令订阅
@@ -98,6 +99,11 @@ git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git
 
 在 AstrBot WebUI → **插件** → **已安装** → **安装插件** → **从文件安装**，选择 GitHub Release 中下载的 ZIP 文件。压缩包内应直接包含 `main.py`、`metadata.yaml` 和 `_conf_schema.json`。
 
+| 安装包 | 字体 | 适用场景 |
+| --- | --- | --- |
+| `astrbot_plugin_juya_ai_daily_v1.0.zip`（默认） | 内置霞鹜文楷轻便版 Regular | 希望日报外观稳定一致 |
+| `astrbot_plugin_juya_ai_daily_v1.0_lite.zip` | 不含字体，使用系统字体 | 更小的安装包和渲染请求 |
+
 本版本使用 AstrBot 官方 HTML 渲染和消息发送接口，要求 AstrBot `>=4.5.7`；不调用 LLM。
 
 ## 📌 注意事项
@@ -109,6 +115,8 @@ git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git
 - 投递状态按文章和目标分别记录，最多保留最近 30 期；本地图片默认保留 7 天
 - 图片日报依赖 AstrBot 的 HTML 渲染服务；服务不可用时会发送渲染失败提示
 - 每期 RSS 的全部新闻会按原栏目顺序合并到一张长图，不截取、不分页
+- 默认字体版仅在实际渲染时读取字体并临时编码，不会常驻内存；无字体轻量版不产生字体编码开销
+- 内置字体为霞鹜文楷轻便版 v1.522，依据 SIL Open Font License 1.1 再分发，详见 [第三方声明](THIRD_PARTY_NOTICES.md)
 
 ## 📝 更新日志
 
@@ -116,4 +124,4 @@ git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git
 
 ## 📄 License
 
-[AGPL-3.0-or-later](LICENSE)
+插件代码使用 [AGPL-3.0-or-later](LICENSE)；内置字体使用 [SIL Open Font License 1.1](assets/OFL-LXGW-WenKai.txt)。

@@ -1,6 +1,8 @@
 import asyncio
+import base64
 import importlib
 import sys
+import tempfile
 import types
 import unittest
 from pathlib import Path
@@ -208,6 +210,27 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(results), 1)
         self.assertIn("图片渲染失败", results[0])
         self.assertNotIn("正在从 RSS 获取", results[0])
+
+    async def test_embedded_font_loader_accepts_ttf(self):
+        plugin = object.__new__(DailyAINewsPlugin)
+        font_bytes = b"\x00\x01\x00\x00test-font"
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            font_path = Path(temp_dir) / "font.ttf"
+            font_path.write_bytes(font_bytes)
+            plugin._embedded_font_path = lambda: font_path
+
+            encoded = await plugin._load_render_font_data()
+
+        self.assertEqual(base64.b64decode(encoded), font_bytes)
+
+    async def test_embedded_font_loader_allows_no_font_package(self):
+        plugin = object.__new__(DailyAINewsPlugin)
+        plugin._embedded_font_path = lambda: Path("missing-font.ttf")
+
+        encoded = await plugin._load_render_font_data()
+
+        self.assertEqual(encoded, "")
 
     async def test_single_manual_send_attempt_even_when_platform_raises(self):
         plugin = object.__new__(DailyAINewsPlugin)

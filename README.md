@@ -82,14 +82,14 @@
 
 ```bash
 cd /path/to/AstrBot/data/plugins
-git clone https://github.com/yuukana1/-AI-.git astrbot_plugin_daily_ai_news
+git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git astrbot_plugin_daily_ai_news
 ```
 
 Windows PowerShell 示例：
 
 ```powershell
 cd C:\path\to\AstrBot\data\plugins
-git clone https://github.com/yuukana1/-AI-.git astrbot_plugin_daily_ai_news
+git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git astrbot_plugin_daily_ai_news
 ```
 
 重启 AstrBot，或在插件管理页执行“重载插件”。

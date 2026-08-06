@@ -7,4 +7,4 @@ author: xx
 astrbot_version: ">=4.5.7"
 support_platforms:
   - aiocqhttp
-repo: https://github.com/yuukana1/-AI-
+repo: https://github.com/yuukana1/astrbot_plugin_juya_ai_daily

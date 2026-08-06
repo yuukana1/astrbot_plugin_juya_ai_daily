@@ -223,6 +223,7 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
             encoded = await plugin._load_render_font_data()
 
         self.assertEqual(base64.b64decode(encoded), font_bytes)
+        self.assertEqual(plugin._font_runtime_status, "霞鹜文楷（已加载）")
 
     async def test_embedded_font_loader_allows_no_font_package(self):
         plugin = object.__new__(DailyAINewsPlugin)
@@ -231,6 +232,10 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
         encoded = await plugin._load_render_font_data()
 
         self.assertEqual(encoded, "")
+        self.assertEqual(
+            plugin._font_runtime_status,
+            "系统字体（未发现内置字体）",
+        )
 
     async def test_single_manual_send_attempt_even_when_platform_raises(self):
         plugin = object.__new__(DailyAINewsPlugin)

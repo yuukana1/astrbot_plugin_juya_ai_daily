@@ -89,6 +89,7 @@ class DailyAINewsPlugin(Star):
             "last_render_error": "无",
             "last_push": "无",
         }
+        self._font_runtime_status = "尚未检测（首次渲染后更新）"
 
         # 文件读写互斥锁
         self._file_lock = asyncio.Lock()
@@ -249,10 +250,10 @@ class DailyAINewsPlugin(Star):
         image_enabled = (
             "已启用" if self.config.get("enable_image_render", True) else "已关闭"
         )
-        font_info = (
-            "霞鹜文楷（内置）"
-            if self._embedded_font_path().is_file()
-            else "系统字体（无字体轻量版）"
+        font_info = getattr(
+            self,
+            "_font_runtime_status",
+            "尚未检测（首次渲染后更新）",
         )
 
         current_targets = self._get_all_targets()
@@ -765,14 +766,17 @@ class DailyAINewsPlugin(Star):
         """按需读取内置字体；无字体轻量版自动返回空值。"""
         font_path = self._embedded_font_path()
         if not font_path.is_file():
+            self._font_runtime_status = "系统字体（未发现内置字体）"
             return ""
 
         try:
             font_bytes = await asyncio.to_thread(font_path.read_bytes)
             if not font_bytes.startswith((b"\x00\x01\x00\x00", b"OTTO")):
                 raise ValueError("文件不是有效的 TTF/OTF 字体")
+            self._font_runtime_status = "霞鹜文楷（已加载）"
             return base64.b64encode(font_bytes).decode("ascii")
         except Exception as e:
+            self._font_runtime_status = "系统字体（内置字体加载失败）"
             logger.warning(
                 f"内置霞鹜文楷加载失败，将使用系统字体: "
                 f"{type(e).__name__}: {e}"

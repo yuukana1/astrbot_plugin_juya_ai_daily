@@ -11,4 +11,4 @@
 - 许可证：SIL Open Font License 1.1
 - 许可证全文：[`assets/OFL-LXGW-WenKai.txt`](assets/OFL-LXGW-WenKai.txt)
 
-字体文件不属于本插件的 AGPL-3.0-or-later 代码许可证范围。无字体轻量版不包含字体二进制，但保留本声明和许可证副本，运行时自动使用系统字体。
+字体文件不属于本插件的 AGPL-3.0-or-later 代码许可证范围；字体缺失或损坏时，运行时会自动回退系统字体。

@@ -39,6 +39,9 @@ class NewsRendererTests(unittest.TestCase):
         self.assertIn("width: 100vw;", NEWS_IMAGE_TEMPLATE)
         self.assertIn("min-width: 1120px;", NEWS_IMAGE_TEMPLATE)
         self.assertIn("overflow-x: hidden;", NEWS_IMAGE_TEMPLATE)
+        self.assertNotIn("追踪变化，理解趋势", NEWS_IMAGE_TEMPLATE)
+        self.assertNotIn('class="quote"', NEWS_IMAGE_TEMPLATE)
+        self.assertIn(".footer .rule { margin-bottom: 20px; }", NEWS_IMAGE_TEMPLATE)
 
     def test_extracts_detailed_items_not_overview(self):
         items = extract_news_items(SAMPLE_HTML, max_items=4)

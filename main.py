@@ -44,7 +44,7 @@ EMBEDDED_FONT_FILENAME = "LXGWWenKaiLite-Regular.ttf"
     "astrbot_plugin_juya_ai_daily",
     "yuukana1",
     "订阅橘鸦AI日报，生成全量图片并提供可靠降级投递",
-    "1.0",
+    "1.0.0",
     "https://github.com/yuukana1/astrbot_plugin_juya_ai_daily",
 )
 class DailyAINewsPlugin(Star):

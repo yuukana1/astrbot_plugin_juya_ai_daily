@@ -102,8 +102,8 @@ git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git
 
 | 安装包 | 字体 | 适用场景 |
 | --- | --- | --- |
-| `astrbot_plugin_juya_ai_daily_v1.0.zip`（默认） | 内置霞鹜文楷轻便版 Regular | 希望日报外观稳定一致 |
-| `astrbot_plugin_juya_ai_daily_v1.0_lite.zip` | 不含字体，使用系统字体 | 更小的安装包和渲染请求 |
+| `astrbot_plugin_juya_ai_daily_v1.0.0.zip`（默认） | 内置霞鹜文楷轻便版 Regular | 希望日报外观稳定一致 |
+| `astrbot_plugin_juya_ai_daily_v1.0.0_lite.zip` | 不含字体，使用系统字体 | 更小的安装包和渲染请求 |
 
 本版本使用 AstrBot 官方 HTML 渲染和消息发送接口，要求 AstrBot `>=4.5.7`；不调用 LLM。
 

@@ -102,7 +102,7 @@ git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git
 
 | 安装包 | 字体 | 适用场景 |
 | --- | --- | --- |
-| `astrbot_plugin_juya_ai_daily_v1.0.1.zip` | 系统中文字体 | GitHub Release 与插件市场唯一发布版本 |
+| `astrbot_plugin_juya_ai_daily_v1.0.2.zip` | 系统中文字体 | GitHub Release 与插件市场唯一发布版本 |
 
 本版本使用 AstrBot 官方 HTML 渲染和消息发送接口，要求 AstrBot `>=4.5.7`；不调用 LLM。
 

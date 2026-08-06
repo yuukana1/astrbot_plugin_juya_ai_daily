@@ -39,8 +39,12 @@ def _install_astrbot_stubs() -> None:
 
     class Filter:
         @staticmethod
-        def command(_name):
-            return lambda function: function
+        def command(name):
+            def decorator(function):
+                function.__astrbot_command_name__ = name
+                return function
+
+            return decorator
 
     class Star:
         def __init__(self, context=None):
@@ -114,6 +118,20 @@ class FakeContext:
 
 
 class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
+    def test_public_commands_are_chinese(self):
+        self.assertEqual(
+            DailyAINewsPlugin.cmd_ainews.__astrbot_command_name__, "AI日报"
+        )
+        self.assertEqual(
+            DailyAINewsPlugin.cmd_subscribe.__astrbot_command_name__, "AI日报订阅"
+        )
+        self.assertEqual(
+            DailyAINewsPlugin.cmd_unsubscribe.__astrbot_command_name__, "AI日报退订"
+        )
+        self.assertEqual(
+            DailyAINewsPlugin.cmd_status.__astrbot_command_name__, "AI日报状态"
+        )
+
     async def test_font_loader_falls_back_when_optional_font_is_absent(self):
         plugin = object.__new__(DailyAINewsPlugin)
 

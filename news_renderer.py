@@ -224,19 +224,8 @@ NEWS_IMAGE_TEMPLATE = r"""
       height: 1px;
       background: #d5d8e9;
     }
-    .footer { margin-top: 54px; }
-    .quote {
-      margin: 23px 10px 27px;
-      padding: 20px 24px;
-      border-radius: 16px;
-      color: #6754ff;
-      background: rgba(195, 207, 239, .72);
-      text-align: center;
-      font-size: 22px;
-      line-height: 1.45;
-      font-weight: 800;
-      box-shadow: inset 0 0 0 1px rgba(106, 84, 255, .05);
-    }
+    .footer { margin-top: 46px; }
+    .footer .rule { margin-bottom: 20px; }
     .footer-row {
       display: flex;
       align-items: center;
@@ -290,7 +279,6 @@ NEWS_IMAGE_TEMPLATE = r"""
 
     <footer class="footer">
       <div class="rule"></div>
-      <div class="quote">「追踪变化，理解趋势，让技术真正服务于人。」</div>
       <div class="footer-row">
         <span>生成时间：{{ generated_at | e }}</span>
         <span>数据来源：{{ source_name | e }}</span>

@@ -2,7 +2,7 @@ name: astrbot_plugin_juya_ai_daily
 display_name: 橘鸦AI日报推送
 desc: 订阅橘鸦AI日报，将当期全部更新渲染为一张高清长图，失败时重试并发送明确失败提示
 short_desc: 将橘鸦AI日报全部更新渲染为一张高清长图并自动推送
-version: 1.0
+version: "1.0"
 author: yuukana1
 astrbot_version: ">=4.5.7"
 support_platforms:

@@ -67,7 +67,14 @@ def _install_astrbot_stubs() -> None:
     star_api.Context = object
     star_api.Star = Star
     star_api.StarTools = StarTools
-    star_api.register = lambda *_args, **_kwargs: lambda cls: cls
+    def register(name, *_args, **_kwargs):
+        def decorator(cls):
+            cls.__astrbot_plugin_name__ = name
+            return cls
+
+        return decorator
+
+    star_api.register = register
 
     sys.modules.update(
         {
@@ -81,12 +88,12 @@ def _install_astrbot_stubs() -> None:
 
 _install_astrbot_stubs()
 plugin_dir = Path(__file__).resolve().parents[1]
-package_name = "astrbot_plugin_daily_ai_news"
+package_name = "astrbot_plugin_juya_ai_daily"
 package = types.ModuleType(package_name)
 package.__path__ = [str(plugin_dir)]
 package.__package__ = package_name
 sys.modules[package_name] = package
-plugin_module = importlib.import_module("astrbot_plugin_daily_ai_news.main")
+plugin_module = importlib.import_module("astrbot_plugin_juya_ai_daily.main")
 DailyAINewsPlugin = plugin_module.DailyAINewsPlugin
 
 
@@ -118,6 +125,12 @@ class FakeContext:
 
 
 class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
+    def test_internal_plugin_name(self):
+        self.assertEqual(
+            DailyAINewsPlugin.__astrbot_plugin_name__,
+            "astrbot_plugin_juya_ai_daily",
+        )
+
     def test_public_commands_are_chinese(self):
         self.assertEqual(
             DailyAINewsPlugin.cmd_ainews.__astrbot_command_name__, "AI日报"
@@ -131,13 +144,6 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             DailyAINewsPlugin.cmd_status.__astrbot_command_name__, "AI日报状态"
         )
-
-    async def test_font_loader_falls_back_when_optional_font_is_absent(self):
-        plugin = object.__new__(DailyAINewsPlugin)
-
-        encoded = await plugin._load_render_font_data()
-
-        self.assertEqual(encoded, "")
 
     async def test_single_manual_send_attempt_even_when_platform_raises(self):
         plugin = object.__new__(DailyAINewsPlugin)

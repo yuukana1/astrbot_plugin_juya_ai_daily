@@ -1,5 +1,4 @@
 import asyncio
-import base64
 import hashlib
 import json
 import os
@@ -40,8 +39,8 @@ from .delivery import (
 RSS_URL = "https://daily.juya.uk/rss.xml"
 
 @register(
-    "astrbot_plugin_daily_ai_news",
-    "xx",
+    "astrbot_plugin_juya_ai_daily",
+    "yuukana1",
     "订阅橘鸦AI日报，生成全量图片并提供可靠降级投递",
     "1.0",
     "https://github.com/yuukana1/astrbot_plugin_juya_ai_daily",
@@ -61,7 +60,7 @@ class DailyAINewsPlugin(Star):
         self._http_session: Optional[aiohttp.ClientSession] = None
 
         # 使用框架规范的数据目录
-        self._data_dir = StarTools.get_data_dir("astrbot_plugin_daily_ai_news")
+        self._data_dir = StarTools.get_data_dir("astrbot_plugin_juya_ai_daily")
         self._subscriptions_file = self._data_dir / "subscriptions.json"
         self._sent_file = self._data_dir / "sent_news.json"
         self._delivery_file = self._data_dir / "delivery_state.json"
@@ -753,37 +752,6 @@ class DailyAINewsPlugin(Star):
         await self._save_sent_news()
         logger.info(f"{article_date} 已对全部当前目标完成投递")
 
-    async def _load_render_font_data(self) -> str:
-        """按需读取预压缩字体；只在实际渲染期间占用 Base64 内存。"""
-        plugin_root = Path(__file__).resolve().parent
-        font_candidates = (
-            plugin_root / "HYRunYuan-55S.woff2",
-            plugin_root / "assets" / "HYRunYuan-55S.woff2",
-        )
-        errors = []
-        found_font = False
-        for font_path in font_candidates:
-            if not font_path.is_file():
-                continue
-            found_font = True
-            try:
-                font_bytes = await asyncio.to_thread(font_path.read_bytes)
-                if not font_bytes.startswith(b"wOF2"):
-                    raise ValueError("文件不是有效的 WOFF2 字体")
-                return base64.b64encode(font_bytes).decode("ascii")
-            except Exception as e:
-                errors.append(f"{font_path}: {type(e).__name__}: {e}")
-
-        checked = ", ".join(str(path) for path in font_candidates)
-        if not found_font:
-            logger.info(f"未提供可选字体，将使用系统字体；已检查: {checked}")
-        else:
-            detail = f"；读取错误: {'; '.join(errors)}" if errors else ""
-            logger.warning(
-                f"指定字体加载失败，将使用系统字体；已检查: {checked}{detail}"
-            )
-        return ""
-
     async def _render_news_image(
         self, article: Dict, article_date: str
     ) -> Optional[str]:
@@ -838,7 +806,6 @@ class DailyAINewsPlugin(Star):
                 now=self._now(),
                 total_count=len(items),
             )
-            render_data["font_data"] = await self._load_render_font_data()
             max_attempts = self._config_int("render_max_retries", 3, 1, 8)
             base_delay = self._config_float("retry_base_delay", 2.0, 0.0, 30.0)
             timeout = self._config_int("render_timeout", 45, 10, 120)

@@ -100,9 +100,15 @@ DailyAINewsPlugin = plugin_module.DailyAINewsPlugin
 class FakeEvent:
     unified_msg_origin = "test:GroupMessage:10001"
 
-    def __init__(self, fail=False, message_id="manual-message-1"):
+    def __init__(
+        self,
+        fail=False,
+        message_id="manual-message-1",
+        unified_msg_origin="test:GroupMessage:10001",
+    ):
         self.fail = fail
         self.send_calls = 0
+        self.unified_msg_origin = unified_msg_origin
         self.message_obj = types.SimpleNamespace(message_id=message_id)
 
     def plain_result(self, text):
@@ -144,6 +150,26 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             DailyAINewsPlugin.cmd_status.__astrbot_command_name__, "AI日报状态"
         )
+
+    async def test_private_chat_can_subscribe(self):
+        plugin = object.__new__(DailyAINewsPlugin)
+        plugin._cmd_subscriptions = set()
+        saved = False
+
+        async def save_subscriptions():
+            nonlocal saved
+            saved = True
+
+        plugin._save_subscriptions = save_subscriptions
+        private_umo = "test:FriendMessage:10001"
+        event = FakeEvent(unified_msg_origin=private_umo)
+
+        messages = [item async for item in plugin.cmd_subscribe(event)]
+
+        self.assertIn(private_umo, plugin._cmd_subscriptions)
+        self.assertTrue(saved)
+        self.assertEqual(len(messages), 1)
+        self.assertIn("当前会话", messages[0])
 
     async def test_single_manual_send_attempt_even_when_platform_raises(self):
         plugin = object.__new__(DailyAINewsPlugin)

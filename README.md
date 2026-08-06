@@ -117,7 +117,6 @@ git clone https://github.com/yuukana1/astrbot_plugin_juya_ai_daily.git
 - 图片日报依赖 AstrBot 的 HTML 渲染服务；服务不可用时会发送渲染失败提示
 - 每期 RSS 的全部新闻会按原栏目顺序合并到一张长图，不截取、不分页
 - 默认字体版仅在实际渲染时读取字体并临时编码，不会常驻内存；无字体轻量版不产生字体编码开销
-- 状态中的字体信息以本次进程真实加载结果为准；首次新渲染前显示“尚未检测”
 - 内置字体为霞鹜文楷轻便版 v1.522，依据 SIL Open Font License 1.1 再分发，详见 [第三方声明](THIRD_PARTY_NOTICES.md)
 
 ## 📝 更新日志

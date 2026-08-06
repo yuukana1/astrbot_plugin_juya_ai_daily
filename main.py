@@ -158,7 +158,7 @@ class DailyAINewsPlugin(Star):
 
     # ==================== 指令处理 ====================
 
-    @filter.command("ainews")
+    @filter.command("AI日报")
     async def cmd_ainews(self, event: AstrMessageEvent):
         """手动获取最新 AI 早报"""
         yield event.plain_result("🔄 正在从 RSS 获取最新 AI 早报，请稍候...")
@@ -213,7 +213,7 @@ class DailyAINewsPlugin(Star):
                 self._image_failure_notice(article_date, "render")
             )
 
-    @filter.command("ainews_sub")
+    @filter.command("AI日报订阅")
     async def cmd_subscribe(self, event: AstrMessageEvent):
         """订阅每日 AI 资讯推送（在群聊中使用）"""
         umo = event.unified_msg_origin
@@ -225,10 +225,10 @@ class DailyAINewsPlugin(Star):
         await self._save_subscriptions()
         yield event.plain_result(
             "✅ 订阅成功！每日将自动推送 AI 早报总结到本群。\n"
-            "取消订阅请发送 /ainews_unsub"
+            "取消订阅请发送 /AI日报退订"
         )
 
-    @filter.command("ainews_unsub")
+    @filter.command("AI日报退订")
     async def cmd_unsubscribe(self, event: AstrMessageEvent):
         """取消每日 AI 资讯推送订阅"""
         umo = event.unified_msg_origin
@@ -239,7 +239,7 @@ class DailyAINewsPlugin(Star):
         await self._save_subscriptions()
         yield event.plain_result("✅ 已取消每日AI资讯推送订阅。")
 
-    @filter.command("ainews_status")
+    @filter.command("AI日报状态")
     async def cmd_status(self, event: AstrMessageEvent):
         """查看推送状态"""
         hour = self._config_int("push_hour", 8, 0, 23)

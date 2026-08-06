@@ -226,7 +226,7 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(base64.b64decode(encoded), font_bytes)
 
-    async def test_embedded_font_loader_allows_no_font_package(self):
+    async def test_embedded_font_loader_allows_missing_font_fallback(self):
         plugin = object.__new__(DailyAINewsPlugin)
         plugin._embedded_font_path = lambda: Path("missing-font.ttf")
 

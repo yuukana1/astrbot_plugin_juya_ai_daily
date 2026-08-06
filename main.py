@@ -754,7 +754,7 @@ class DailyAINewsPlugin(Star):
         )
 
     async def _load_render_font_data(self) -> str:
-        """按需读取内置字体；无字体轻量版自动返回空值。"""
+        """按需读取内置字体；字体缺失时返回空值并回退系统字体。"""
         font_path = self._embedded_font_path()
         if not font_path.is_file():
             return ""

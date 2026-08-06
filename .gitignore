@@ -1,0 +1,25 @@
+# Python caches and test output
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local AstrBot data and secrets
+.env
+*.env
+data/
+plugin_data/
+config.json
+*.json.bak
+
+# Build artifacts and local previews
+*.zip
+outputs/
+work/
+
+# Optional third-party fonts: add only with verified redistribution rights.
+*.ttf
+*.otf
+*.woff
+*.woff2

@@ -1,0 +1,111 @@
+{
+	"push_hour": {
+		"type": "int",
+		"description": "每日推送时间（小时）",
+		"hint": "0-23，默认为 8（早上8点）",
+		"default": 8
+	},
+	"push_minute": {
+		"type": "int",
+		"description": "每日推送时间（分钟）",
+		"hint": "0-59，默认为 0",
+		"default": 0
+	},
+	"rss_poll_interval": {
+		"type": "int",
+		"description": "RSS 轮询间隔（秒）",
+		"hint": "当 RSS 尚未更新当日内容时，每隔多少秒重新检查一次，默认 600 秒（10分钟）",
+		"default": 600
+	},
+	"timezone": {
+		"type": "string",
+		"description": "定时任务时区",
+		"hint": "使用 IANA 时区名称，例如 Asia/Shanghai。无效或系统缺少时区数据时自动回退东八区。",
+		"default": "Asia/Shanghai"
+	},
+	"enable_image_render": {
+		"type": "bool",
+		"description": "是否将日报渲染为图片",
+		"hint": "使用 AstrBot 官方 HTML 渲染能力生成精美日报；多次渲染失败时发送渲染失败提示。",
+		"default": true
+	},
+	"image_quality": {
+		"type": "int",
+		"description": "日报 JPEG 图片质量",
+		"hint": "范围 70-95。默认 90，以保证长图中文字清晰；调低可减小图片体积。",
+		"default": 90
+	},
+	"image_delivery_mode": {
+		"type": "string",
+		"description": "图片发送模式",
+		"hint": "auto 先发 URL，失败后下载为本地文件发送；url 仅发送 URL；local 始终下载后发送。",
+		"options": ["auto", "url", "local"],
+		"default": "auto"
+	},
+	"render_max_retries": {
+		"type": "int",
+		"description": "图片渲染最大尝试次数",
+		"hint": "包含首次尝试，建议 2-4。默认 3。",
+		"default": 3
+	},
+	"send_max_retries": {
+		"type": "int",
+		"description": "每种消息发送最大尝试次数",
+		"hint": "包含首次尝试；图片发送失败后会发送简短的发送失败提示。默认 3。",
+		"default": 3
+	},
+	"retry_base_delay": {
+		"type": "float",
+		"description": "重试基础等待秒数",
+		"hint": "按 1、2、4 倍指数退避并带少量抖动，默认 2 秒。",
+		"default": 2.0
+	},
+	"render_timeout": {
+		"type": "int",
+		"description": "单次渲染超时秒数",
+		"hint": "默认 45 秒，范围由插件限制为 10-120 秒。",
+		"default": 45
+	},
+	"render_circuit_failure_threshold": {
+		"type": "int",
+		"description": "渲染熔断失败阈值",
+		"hint": "连续若干轮渲染失败后临时停止渲染，避免低配服务器持续阻塞。默认 3。",
+		"default": 3
+	},
+	"render_circuit_minutes": {
+		"type": "int",
+		"description": "渲染熔断时长（分钟）",
+		"hint": "熔断期间跳过图片并发送渲染失败提示，默认 30 分钟。",
+		"default": 30
+	},
+	"send_concurrency": {
+		"type": "int",
+		"description": "并发发送目标数",
+		"hint": "2C2G 服务器建议保持默认 3，插件限制最大 10。",
+		"default": 3
+	},
+	"manual_dedupe_seconds": {
+		"type": "int",
+		"description": "手动图片防重复时间（秒）",
+		"hint": "同一个平台消息事件被重复处理时，在此时间内不会再次发送图片；新的手动命令不受影响。默认 60 秒。",
+		"default": 60
+	},
+	"image_cache_days": {
+		"type": "int",
+		"description": "本地日报图片保留天数",
+		"hint": "仅用于 URL 发送失败后的本地文件兜底，默认 7 天。",
+		"default": 7
+	},
+	"subscribed_groups": {
+		"type": "text",
+		"description": "订阅推送的群聊列表（每行一个）",
+		"hint": "支持跨平台格式 {机器人名称}:{群聊ID}。如果不加前缀仅填纯数字，默认为 QQ 群号。也可通过群内发送 /ainews_sub 指令订阅。",
+		"default": ""
+	},
+	"subscribed_users": {
+		"type": "text",
+		"description": "订阅推送的私聊列表（每行一个）",
+		"hint": "支持跨平台格式 {机器人名称}:{私聊账号ID}。如果不加前缀仅填纯数字，默认为私聊 QQ 号。也可通过私聊发送 /ainews_sub 指令订阅。",
+		"default": ""
+	}
+}

@@ -1,0 +1,10 @@
+name: astrbot_plugin_daily_ai_news
+display_name: 橘鸦AI日报推送
+desc: 订阅橘鸦AI日报，将当期全部更新渲染为一张高清长图，失败时重试并发送明确失败提示
+short_desc: 将橘鸦AI日报全部更新渲染为一张高清长图并自动推送
+version: 1.0
+author: xx
+astrbot_version: ">=4.5.7"
+support_platforms:
+  - aiocqhttp
+repo: https://github.com/yuukana1/-AI-

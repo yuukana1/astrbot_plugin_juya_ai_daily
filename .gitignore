@@ -17,3 +17,7 @@ config.json
 *.zip
 outputs/
 work/
+
+# Optional local font assets are excluded from GitHub/market releases
+assets/LXGWWenKaiLite-Regular.ttf
+assets/OFL-LXGW-WenKai.txt

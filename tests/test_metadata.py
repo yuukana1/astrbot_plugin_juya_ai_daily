@@ -16,7 +16,7 @@ class MetadataTests(unittest.TestCase):
         )
 
         self.assertIsNotNone(match)
-        self.assertEqual(match.group(2), "1.0.2")
+        self.assertEqual(match.group(2), "1.0.3")
         self.assertRegex(match.group(2), r"^\d+\.\d+\.\d+$")
 
     def test_logo_is_recommended_square_png(self):

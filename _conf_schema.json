@@ -2,8 +2,8 @@
 	"push_hour": {
 		"type": "int",
 		"description": "每日推送时间（小时）",
-		"hint": "0-23，默认为 8（早上8点）",
-		"default": 8
+		"hint": "0-23，默认为 10（上午10点）；插件会提前 1 分钟获取并推送",
+		"default": 10
 	},
 	"push_minute": {
 		"type": "int",

@@ -44,7 +44,7 @@ EMBEDDED_FONT_FILENAME = "LXGWWenKaiLite-Regular.ttf"
     "astrbot_plugin_juya_ai_daily",
     "yuukana1",
     "订阅橘鸦AI日报，生成全量图片并提供可靠降级投递",
-    "1.0.2",
+    "1.0.3",
     "https://github.com/yuukana1/astrbot_plugin_juya_ai_daily",
 )
 class DailyAINewsPlugin(Star):
@@ -151,28 +151,63 @@ class DailyAINewsPlugin(Star):
         )
 
     def _now(self) -> datetime:
-        return datetime.now(self._timezone)
+        timezone = getattr(
+            self, "_timezone", dt_timezone(timedelta(hours=8), "Asia/Shanghai")
+        )
+        return datetime.now(timezone)
 
     def _now_text(self) -> str:
         return self._now().strftime("%Y-%m-%d %H:%M:%S")
+
+    @staticmethod
+    def _scheduled_fetch_time(now: datetime, hour: int, minute: int) -> datetime:
+        """Return the daily RSS fetch time, one minute before the configured time."""
+        configured = now.replace(
+            hour=hour, minute=minute, second=0, microsecond=0
+        )
+        return configured - timedelta(minutes=1)
 
     # ==================== 指令处理 ====================
 
     @filter.command("AI日报")
     async def cmd_ainews(self, event: AstrMessageEvent):
         """手动获取最新 AI 早报"""
+        today = self._now().strftime("%Y-%m-%d")
         article = await self._fetch_rss_latest()
         if not article:
-            yield event.plain_result(
-                self._image_failure_notice(
-                    self._now().strftime("%Y-%m-%d"), "render"
+            # RSS 短暂异常时，若进程中仍保留上一期文章，也可以继续提供最近一期日报。
+            cached_article = getattr(self, "_rss_cached_article", None)
+            if cached_article and self._parse_article_date(cached_article) < today:
+                article = cached_article
+            else:
+                yesterday = (
+                    datetime.strptime(today, "%Y-%m-%d") - timedelta(days=1)
+                ).strftime("%Y-%m-%d")
+                article = await self._fetch_issue_page(yesterday)
+            if not article:
+                yield event.plain_result(
+                    f"⚠️ RSS 日报源暂时无法访问，无法获取 {today} 日报图片。\n"
+                    "请稍后再试。"
                 )
-            )
-            return
+                return
+
+        # 日报通常在当天稍晚发布。手动请求时不把“昨天仍是最新一期”误报为渲染失败，
+        # 而是明确告知用户未更新，并继续发送 RSS 中最近一期日报。
+        article_date = self._parse_article_date(article)
+        fallback_notice = ""
+        if article_date != today:
+            if article_date < today:
+                fallback_notice = (
+                    f"ℹ️ {today} AI 日报尚未发布，已自动发送最近一期 "
+                    f"（{article_date}）日报。"
+                )
+            else:
+                yield event.plain_result(
+                    f"⚠️ RSS 最新日报日期异常（{article_date}），暂时无法获取 {today} 日报。"
+                )
+                return
 
         # 使用文章实际日期展示；图片与摘要缓存还会包含文章链接/内容指纹。
-        article_date = self._parse_article_date(article)
-
         delivery_key = self._image_delivery_key(
             "manual",
             article.get("link", article_date),
@@ -191,10 +226,18 @@ class DailyAINewsPlugin(Star):
             image = self._get_cached_image(article_date)
             if not image and self.config.get("enable_image_render", True):
                 image = await self._render_news_image(article, article_date)
+
+            if fallback_notice:
+                # 在锁内先记录尝试，再 yield 提示，避免同一手动事件并发处理时重复发图。
+                if image:
+                    self._remember_manual_image_attempt(delivery_key)
+                yield event.plain_result(fallback_notice)
+
             if image:
                 # 手动请求只执行一次图片发送，不在异常后尝试第二张图片；
                 # 防止平台已收到消息但客户端抛错时发生重复投递。
-                self._remember_manual_image_attempt(delivery_key)
+                if not fallback_notice:
+                    self._remember_manual_image_attempt(delivery_key)
                 sent = await self._send_event_image_once(
                     event, image, article_date
                 )
@@ -242,7 +285,7 @@ class DailyAINewsPlugin(Star):
     @filter.command("AI日报状态")
     async def cmd_status(self, event: AstrMessageEvent):
         """查看推送状态"""
-        hour = self._config_int("push_hour", 8, 0, 23)
+        hour = self._config_int("push_hour", 10, 0, 23)
         minute = self._config_int("push_minute", 0, 0, 59)
         poll_interval = self._config_int("rss_poll_interval", 600, 60, 86400)
         image_enabled = (
@@ -266,6 +309,7 @@ class DailyAINewsPlugin(Star):
             "📊 **每日AI资讯推送状态**\n"
             f"📡 数据源：RSS 订阅（橘鸦 AI 日报）\n"
             f"⏰ 首次检查时间：每天 {hour:02d}:{minute:02d}\n"
+            f"⏱️ 实际获取时间：每天提前 1 分钟（{(hour * 60 + minute - 1) % 1440 // 60:02d}:{(hour * 60 + minute - 1) % 1440 % 60:02d}）\n"
             f"🔄 轮询间隔：{poll_interval} 秒\n"
             f"🌏 调度时区：{self.config.get('timezone', 'Asia/Shanghai')}\n"
             f"🖼️ 图片日报：{image_enabled}\n"
@@ -290,16 +334,14 @@ class DailyAINewsPlugin(Star):
 
         while True:
             try:
-                target_hour = self._config_int("push_hour", 8, 0, 23)
+                target_hour = self._config_int("push_hour", 10, 0, 23)
                 target_minute = self._config_int("push_minute", 0, 0, 59)
                 poll_interval = self._config_int(
                     "rss_poll_interval", 600, 60, 86400
                 )
 
                 now = self._now()
-                target = now.replace(
-                    hour=target_hour, minute=target_minute, second=0, microsecond=0
-                )
+                target = self._scheduled_fetch_time(now, target_hour, target_minute)
                 if target <= now:
                     target += timedelta(days=1)
 
@@ -352,16 +394,14 @@ class DailyAINewsPlugin(Star):
     async def _startup_compensation_check(self):
         """启动时补偿检查：若当前已过推送时间且当天未推送过，立即尝试推送。"""
         try:
-            target_hour = self._config_int("push_hour", 8, 0, 23)
+            target_hour = self._config_int("push_hour", 10, 0, 23)
             target_minute = self._config_int("push_minute", 0, 0, 59)
 
             now = self._now()
             today = now.strftime("%Y-%m-%d")
 
             # 只在过了今天的推送时间后才补偿
-            target_time = now.replace(
-                hour=target_hour, minute=target_minute, second=0, microsecond=0
-            )
+            target_time = self._scheduled_fetch_time(now, target_hour, target_minute)
             if now < target_time:
                 logger.info("当前未到推送时间，跳过补偿检查")
                 return
@@ -699,6 +739,8 @@ class DailyAINewsPlugin(Star):
     async def _ensure_local_image(
         self, image_url: str, article_date: str
     ) -> Optional[str]:
+        if not hasattr(self, "_local_image_cache"):
+            self._local_image_cache = {}
         if image_url in self._local_image_cache:
             path = self._local_image_cache[image_url]
             if os.path.exists(path):
@@ -949,6 +991,46 @@ class DailyAINewsPlugin(Star):
             logger.error(f"RSS 获取失败: {type(e).__name__}: {e!r}")
 
         return None
+
+    async def _fetch_issue_page(self, issue_date: str) -> Optional[Dict]:
+        """RSS 超时或暂不可用时，按日期读取日报页面作为手动获取兜底。"""
+        try:
+            datetime.strptime(issue_date, "%Y-%m-%d")
+        except (TypeError, ValueError):
+            return None
+
+        session = self._http_session
+        if session is None or session.closed:
+            logger.error("日报页面兜底失败：HTTP 会话尚未初始化")
+            return None
+
+        url = f"https://daily.juya.uk/issues/{issue_date}/"
+        try:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    logger.warning(
+                        f"日报页面兜底返回状态码 {resp.status}: {issue_date}"
+                    )
+                    return None
+                raw_content = await resp.text()
+            if not raw_content.strip():
+                return None
+            article = {
+                "title": issue_date,
+                "link": url,
+                "content": self._clean_html(raw_content),
+                "raw_content": raw_content,
+                "pub_date": "",
+            }
+            self._rss_cached_article = article
+            self._runtime_status["last_article_date"] = issue_date
+            logger.info(f"已通过日报页面兜底获取：{issue_date}")
+            return article
+        except Exception as e:
+            logger.warning(
+                f"日报页面兜底获取失败 ({issue_date}): {type(e).__name__}: {e}"
+            )
+            return None
 
     def _parse_article_date(self, article: Dict) -> str:
         """从文章中解析日期，优先使用标题日期，回退 pubDate，最后使用当天日期。"""

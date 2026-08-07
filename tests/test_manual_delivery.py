@@ -6,6 +6,7 @@ import sys
 import tempfile
 import types
 import unittest
+from datetime import datetime
 from pathlib import Path
 
 
@@ -196,13 +197,17 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("用户 2233", status)
         self.assertNotIn("指令订阅数", status)
 
-    async def test_fetch_failure_returns_only_render_failure(self):
+    async def test_fetch_failure_returns_network_failure_notice(self):
         plugin = object.__new__(DailyAINewsPlugin)
 
         async def fetch():
             return None
 
+        async def fetch_page(_issue_date):
+            return None
+
         plugin._fetch_rss_latest = fetch
+        plugin._fetch_issue_page = fetch_page
         plugin._now = lambda: types.SimpleNamespace(
             strftime=lambda _format: "2026-08-06"
         )
@@ -210,8 +215,85 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
         results = [item async for item in plugin.cmd_ainews(FakeEvent())]
 
         self.assertEqual(len(results), 1)
-        self.assertIn("图片渲染失败", results[0])
+        self.assertIn("RSS 日报源暂时无法访问", results[0])
         self.assertNotIn("正在从 RSS 获取", results[0])
+
+    async def test_manual_uses_previous_issue_when_today_is_not_published(self):
+        plugin = object.__new__(DailyAINewsPlugin)
+        plugin.config = {
+            "enable_image_render": True,
+            "manual_dedupe_seconds": 60,
+            "image_delivery_mode": "url",
+        }
+        plugin._image_send_locks = {}
+        plugin._recent_image_deliveries = {}
+        plugin._recent_manual_image_attempts = {}
+        plugin._now = lambda: types.SimpleNamespace(
+            strftime=lambda _format: "2026-08-07"
+        )
+        article = {
+            "title": "2026-08-06",
+            "link": "https://daily.juya.uk/issues/2026-08-06/",
+        }
+
+        async def fetch():
+            return article
+
+        async def render(*_args):
+            return "https://example.com/2026-08-06.jpg"
+
+        plugin._fetch_rss_latest = fetch
+        plugin._parse_article_date = lambda _article: "2026-08-06"
+        plugin._get_cached_image = lambda _date: None
+        plugin._render_news_image = render
+
+        event = FakeEvent(message_id="fallback-message")
+        results = [item async for item in plugin.cmd_ainews(event)]
+
+        self.assertEqual(event.send_calls, 1)
+        self.assertEqual(len(results), 1)
+        self.assertIn("尚未发布", results[0])
+        self.assertIn("2026-08-06", results[0])
+
+    async def test_manual_uses_issue_page_when_rss_times_out(self):
+        plugin = object.__new__(DailyAINewsPlugin)
+        plugin.config = {
+            "enable_image_render": True,
+            "manual_dedupe_seconds": 60,
+            "image_delivery_mode": "url",
+        }
+        plugin._image_send_locks = {}
+        plugin._recent_image_deliveries = {}
+        plugin._recent_manual_image_attempts = {}
+        plugin._now = lambda: types.SimpleNamespace(
+            strftime=lambda _format: "2026-08-07"
+        )
+        article = {
+            "title": "2026-08-06",
+            "link": "https://daily.juya.uk/issues/2026-08-06/",
+        }
+
+        async def fetch():
+            return None
+
+        async def fetch_page(_issue_date):
+            return article
+
+        async def render(*_args):
+            return "https://example.com/2026-08-06.jpg"
+
+        plugin._fetch_rss_latest = fetch
+        plugin._fetch_issue_page = fetch_page
+        plugin._parse_article_date = lambda _article: "2026-08-06"
+        plugin._get_cached_image = lambda _date: None
+        plugin._render_news_image = render
+
+        event = FakeEvent(message_id="page-fallback-message")
+        results = [item async for item in plugin.cmd_ainews(event)]
+
+        self.assertEqual(event.send_calls, 1)
+        self.assertEqual(len(results), 1)
+        self.assertIn("尚未发布", results[0])
 
     async def test_embedded_font_loader_accepts_ttf(self):
         plugin = object.__new__(DailyAINewsPlugin)
@@ -306,6 +388,9 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
         plugin._image_send_locks = {}
         plugin._recent_image_deliveries = {}
         plugin._recent_manual_image_attempts = {}
+        plugin._now = lambda: types.SimpleNamespace(
+            strftime=lambda _format: "2026-08-06"
+        )
         article = {
             "title": "2026-08-06",
             "link": "https://daily.juya.uk/issues/2026-08-06/",
@@ -350,6 +435,9 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
         plugin._image_send_locks = {}
         plugin._recent_image_deliveries = {}
         plugin._recent_manual_image_attempts = {}
+        plugin._now = lambda: types.SimpleNamespace(
+            strftime=lambda _format: "2026-08-06"
+        )
         article = {
             "title": "2026-08-06",
             "link": "https://daily.juya.uk/issues/2026-08-06/",
@@ -390,6 +478,19 @@ class ManualDeliveryTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(send_calls, 2)
         self.assertEqual(first_results + second_results, [])
+
+    def test_scheduled_fetch_is_one_minute_before_configured_time(self):
+        plugin = object.__new__(DailyAINewsPlugin)
+        now = datetime(2026, 8, 7, 12, 0)
+
+        self.assertEqual(
+            plugin._scheduled_fetch_time(now, 10, 0),
+            datetime(2026, 8, 7, 9, 59),
+        )
+        self.assertEqual(
+            plugin._scheduled_fetch_time(now, 0, 0),
+            datetime(2026, 8, 6, 23, 59),
+        )
 
 
 if __name__ == "__main__":
